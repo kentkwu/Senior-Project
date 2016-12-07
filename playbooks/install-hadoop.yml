@@ -2,8 +2,82 @@
 - hosts: hadoop
   become: yes
   tasks:
-   - name: Unzip hadoop from tarball
-     unarchive:
-       src: /opt/hadoop-2.7.3.tar.gz
-       dest: /opt
-       remote_src: yes
+   - name: Set permissions on /opt/hadoop
+     shell: chown -R hduser:hadoop /opt/hadoop
+     become: yes
+
+   - name: Set JAVA_HOME environment variable in /etc/bash.bashrc
+     lineinfile: dest=/etc/bash.bashrc
+                 line='export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")'
+                 state=present
+
+   - name: Setting Hadoop install path in /etc/bash.bashrc
+     lineinfile: dest=/etc/bash.bashrc
+                 line='export HADOOP_INSTALL=/opt/hadoop'
+                 state=present
+
+   - name: Setting Hadoop install path in /etc/bash.bashrc
+     lineinfile: dest=/etc/bash.bashrc
+                 line='export PATH=$PATH:$HADOOP_INSTALL/bin'
+                 state=present
+
+   - name: Set JAVA_HOME in Haddop in /opt/hadoop/etc/hadoop/hadoop-env.sh
+     lineinfile:
+       dest: /opt/hadoop/etc/hadoop/hadoop-env.sh
+       regexp: '^export JAVA_HOME'
+       line: 'export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")'
+
+   - name: Set HADOOP_HEAPSIZE to 250 in /opt/hadoop/etc/hadoop/hadoop-env.sh
+     lineinfile:
+       dest: /opt/hadoop/etc/hadoop/hadoop-env.sh
+       regexp: '^#export HADOOP_HEAPSIZE='
+       line: 'export HADOOP_HEAPSIZE=250'
+
+   - name: Comment out old HADOOP_DATANODE_OPTS values
+     replace:
+        dest: /opt/hadoop/etc/hadoop/hadoop-env.sh
+        regexp: '^export HADOOP_DATANODE_OPTS'
+        replace: '#export HADOOP_DATANODE_OPTS'
+     tags: update-fstab
+
+   - name: Set HADOOP_DATANODE_OPTS in /opt/hadoop/etc/hadoop/hadoop-env.sh
+     lineinfile: dest=/opt/hadoop/etc/hadoop/hadoop-env.sh
+                 line='export HADOOP_DATANODE_OPTS="-Dcom.sun.management.jmxremote $HADOOP_DATANODE_OPTSi -client"'
+                 state=present
+
+   - name: Copy new core-site.xml into /opt/hadoop/etc/hadoop/core-site.xml
+     copy:
+       src: ../hadoop-configs/core-site.xml
+       dest: /opt/hadoop/etc/hadoop/core-site.xml
+       mode: 0644
+
+   - name: Copy new mapred-site.xml.template into /opt/hadoop/etc/hadoop/mapred-site.xml.template
+     copy:
+       src: ../hadoop-configs/mapred-site.xml.template
+       dest: /opt/hadoop/etc/hadoop/mapred-site.xml.template
+       mode: 0644
+
+   - name: Copy new hdfs-site.xml into /opt/hadoop/etc/hadoop/hdfs-site.xml
+     copy:
+       src: ../hadoop-configs/hdfs-site.xml
+       dest: /opt/hadoop/etc/hadoop/hdfs-site.xml
+       mode: 0644
+
+   - name: create /hdfs/tmp directory
+     file: path=/hdfs/tmp state=directory mode=0777
+     become: yes
+
+   - name: Set permissions on /opt/hadoop
+     shell: chown -R hduser:hadoop /hdfs/
+     become: yes
+
+   - name: Set permissions on /hdfs/
+     shell: chmod -R 777 /hdfs/
+     become: yes
+
+   - name: Format Hadoop Namenodes
+     shell: /opt/hadoop/bin/hdfs namenode -format -force
+
+   - name: Set permissions on /hdfs/ (Allows for reformatting)
+     shell: chmod -R 777 /hdfs/
+     become: yes

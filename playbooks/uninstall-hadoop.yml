@@ -1,0 +1,6 @@
+---
+- hosts: hadoop
+  tasks:
+    - name: uninstall hadoop
+      shell: rm -rf /opt
+      become: yes

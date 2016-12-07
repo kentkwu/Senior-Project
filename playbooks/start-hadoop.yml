@@ -1,0 +1,8 @@
+---
+- hosts: hadoop
+  tasks:
+    - name: Start all Hadoop services
+      shell: /opt/hadoop/sbin/start-all.sh
+      become: yes
+      become_method: su
+      become_user: hduser
