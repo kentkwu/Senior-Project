@@ -1,0 +1,16 @@
+---
+- hosts: hadoop
+  become: yes
+  tasks:
+  - name: create /opt directory
+    file: path=/opt state=directory
+    become: yes
+  #- name: download file from a file path
+    #get_url:
+      #url: "http://apache.claz.org/hadoop/common/hadoop-2.7.3/hadoop-2.7.3.tar.gz"
+      #dest: /opt
+  - name: Unzip hadoop from tarball
+    unarchive:
+      src: hadoop.tar.gz
+      dest: /opt
+      

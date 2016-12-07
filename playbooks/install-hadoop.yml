@@ -1,0 +1,9 @@
+---
+- hosts: hadoop
+  become: yes
+  tasks:
+   - name: Unzip hadoop from tarball
+     unarchive:
+       src: /opt/hadoop-2.7.3.tar.gz
+       dest: /opt
+       remote_src: yes

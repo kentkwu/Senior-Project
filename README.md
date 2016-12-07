@@ -1,2 +1,1 @@
-# Senior-Project
-Senior Project – Raspberry Pi Cluster
+# Raspberry Pi Cluster

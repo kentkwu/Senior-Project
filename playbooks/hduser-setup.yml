@@ -1,0 +1,36 @@
+---
+- hosts: hadoop
+  become: yes
+  vars:
+   hdusername: hduser
+   hdpassword: vucsc
+  tasks:
+  - name: create the hadoop user group
+    group:
+      name: hadoop
+      state: present
+  - name: creating "{{ hdusername }}" account
+    user:
+      name: "{{ hdusername }}"
+      state: present
+      group: hadoop
+      groups: "sudo"
+      append: yes
+      password: "{{ hdpassword |password_hash('sha512') }}"
+
+- hosts: hadoop
+  become: yes
+  become_user: hduser
+  become_method: su
+  tasks:
+  - name: Create .ssh directory
+    file: path=~/.ssh state=directory
+    become: yes
+    become_user: hduser
+    become_method: su
+  - name: Generate SSH key for hduser
+    shell: ssh-keygen -t rsa -f ~/.ssh/id_rsa -q -N ""
+    args:
+      creates: ~/.ssh/id_rsa
+  - name: Make SSH key an authorized key
+    shell: cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
