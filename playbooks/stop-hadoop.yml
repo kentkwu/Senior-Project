@@ -1,0 +1,8 @@
+---
+- hosts: hadoop
+  remote_user: hduser
+  tasks:
+    - name: Stop Hadoop dfs -- /opt/hadoop/sbin/stop-dfs.sh
+      shell: /opt/hadoop/sbin/stop-dfs.sh
+    - name: Stop Hadoop yarn -- /opt/hadoop/sbin/stop-yarn.sh
+      shell: /opt/hadoop/sbin/stop-yarn.sh

@@ -1,0 +1,10 @@
+---
+- hosts: hadoop
+  remote_user: hduser
+  tasks:
+  - name: Check that all Hadoop processes are running
+    shell: jps
+    register: jps_output
+  - debug: var=jps_output
+  
+  

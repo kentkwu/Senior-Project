@@ -1,5 +1,6 @@
 ---
 - hosts: hadoop
+  remote_user: hduser
   tasks:
     - name: uninstall hadoop
       shell: rm -rf /opt

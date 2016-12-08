@@ -1,8 +1,8 @@
 ---
 - hosts: hadoop
+  remote_user: hduser
   tasks:
-    - name: Start all Hadoop services
-      shell: /opt/hadoop/sbin/start-all.sh
-      become: yes
-      become_method: su
-      become_user: hduser
+    - name: Start Hadoop dfs -- /opt/hadoop/sbin/start-dfs.sh
+      shell: /opt/hadoop/sbin/start-dfs.sh
+    - name: Start Hadoop yarn -- /opt/hadoop/sbin/start-yarn.sh
+      shell: /opt/hadoop/sbin/start-yarn.sh

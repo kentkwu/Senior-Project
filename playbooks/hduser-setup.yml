@@ -1,6 +1,6 @@
 ---
 - hosts: hadoop
-  become: yes
+  remote_user: pi
   vars:
    hdusername: hduser
    hdpassword: vucsc
@@ -17,20 +17,31 @@
       groups: "sudo"
       append: yes
       password: "{{ hdpassword |password_hash('sha512') }}"
+    become: true
+  - name: set up hosts on remotes
+    template:
+      src: ../templates/etc/hosts
+      dest: /etc/hosts
+    become: true
 
 - hosts: hadoop
-  become: yes
-  become_user: hduser
-  become_method: su
+  remote_user: hduser
   tasks:
-  - name: Create .ssh directory
-    file: path=~/.ssh state=directory
-    become: yes
-    become_user: hduser
-    become_method: su
-  - name: Generate SSH key for hduser
-    shell: ssh-keygen -t rsa -f ~/.ssh/id_rsa -q -N ""
-    args:
-      creates: ~/.ssh/id_rsa
-  - name: Make SSH key an authorized key
-    shell: cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
+  - name: Ensure .ssh directory exists
+    stat: path=~/.ssh
+    register: p
+  - block:
+    - name: Create .ssh directory if it does not exist
+      file: path=~/.ssh state=directory
+    - name: Generate SSH key for hduser
+      shell: ssh-keygen -t rsa -f ~/.ssh/id_rsa -q -N ""
+      args:
+        creates: ~/.ssh/id_rsa
+    - name: Make SSH key an authorized key
+      shell: cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
+    when: not p.stat.exists
+    - name: Copy auth keys to remote servers
+      authorized_key:
+      user: hduser
+       key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
+       become: yes

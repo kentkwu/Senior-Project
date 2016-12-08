@@ -1,13 +1,21 @@
 ---
 - hosts: hadoop
-  become: yes
+  remote_user: hduser
+  become: true
   tasks:
-  - name: create /opt directory
+  - name: Create /opt directory if it doesnt exist
     file: path=/opt state=directory
-    become: yes
-  - name: Unzip hadoop from tarball
+
+  - name: Ensure hadoop directory exists
+    stat: path=/opt/hadoop
+    register: p
+
+  - name: Copy and extract hadoop-2.7.3 if hadoop is not installed
     unarchive:
-      src: hadoop.tar.gz
+      src: hadoop.tar.gz    #extract into variable
       dest: /opt
+    when: not p.stat.exists
+
   - name: rename hadoop-2.7.3 to hadoop
     command: mv /opt/hadoop-2.7.3 /opt/hadoop
+    when: not p.stat.exists
